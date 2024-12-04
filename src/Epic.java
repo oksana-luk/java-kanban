@@ -4,12 +4,12 @@ public class Epic extends Task{
     private ArrayList<Integer> subtasksIds;
 
     public Epic(String name, String description) {
-        super(name, description);
+        super(name, description, TaskStatus.NEW);
         subtasksIds = new ArrayList<>();
     }
 
     public ArrayList<Integer> getSubtasksIds() {
-        return subtasksIds;
+        return new ArrayList<>(subtasksIds);
     }
 
     @Override
@@ -33,12 +33,10 @@ public class Epic extends Task{
     }
 
     public void deleteSubtaskId(int subtaskId) {
-        Integer id = (Integer) subtaskId;
-        subtasksIds.remove(id);
+        subtasksIds.remove(Integer.valueOf(subtaskId));
     }
 
     public void deleteAllSubtaskId() {
         subtasksIds.clear();
     }
-
 }
