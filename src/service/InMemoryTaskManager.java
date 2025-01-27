@@ -109,7 +109,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public ArrayList<Task> getAllTasks() {
-        if (tasks.isEmpty()){
+        if (tasks.isEmpty()) {
             //System.out.println("Нет задач!");
             return new ArrayList<>();
         }
@@ -119,7 +119,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public ArrayList<Epic> getAllEpics() {
-        if (epics.isEmpty()){
+        if (epics.isEmpty()) {
             //System.out.println("Нет эпиков!");
             return new ArrayList<>();
         }
@@ -128,7 +128,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public ArrayList<Subtask> getAllSubtasks() {
-        if (subtasks.isEmpty()){
+        if (subtasks.isEmpty()) {
             //System.out.println("Нет подзадач!");
             return new ArrayList<>();
         }
