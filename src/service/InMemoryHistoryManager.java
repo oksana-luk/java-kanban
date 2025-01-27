@@ -1,31 +1,23 @@
 package service;
 
+import model.Task;
 import model.Epic;
 import model.Subtask;
-import model.Task;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private final int HISTORY_CAPACITY = 10;
-    //При создании менеджера заведите список для хранения просмотренных задач.
-    private ArrayList<Task> history = new ArrayList<>();
+    private HashMap<Integer, Node<Task>> tasksIDHashMap = new HashMap<>();
+    private TasksLinkedList<Task> listNode = new TasksLinkedList<>();
 
-    //возвращаемый список задач может содержать объект одного из трёх типов задач
     @Override
     public List<Task> getHistory() {
-        return new ArrayList<>(history);
+        return listNode.getHistory();
     }
 
-    //данные в полях менеджера будут обновляться при вызове методов-просмотров
-    //выбрать тип, являющийся общим родителем обоих классов
     @Override
     public void addTask(Task task) {
-        if (history.size() == HISTORY_CAPACITY) {
-            history.removeFirst();
-        }
-
         Task taskCopy;
         if (task instanceof Subtask) {
             taskCopy = new Subtask(task.getName(), task.getDescription(), task.getStatus(), ((Subtask) task).getEpicId());
@@ -36,6 +28,25 @@ public class InMemoryHistoryManager implements HistoryManager {
             taskCopy = new Task(task.getName(), task.getDescription(), task.getStatus());
         }
         taskCopy.setId(task.getId());
-        history.add(taskCopy);
+        remove(task.getId());
+        Node<Task> node = listNode.linkLast(taskCopy);
+        tasksIDHashMap.put(taskCopy.getId(), node);
+    }
+
+    @Override
+    public void remove(int id) {
+        Node<Task> node = tasksIDHashMap.get(id);
+        if (node != null) {
+            listNode.removeNode(node);
+            tasksIDHashMap.remove(id);
+        }
+    }
+
+    @Override
+    public void removeTasks(List<? extends Task> tasks) {
+        for (Task task : tasks) {
+            remove(task.getId());
+        }
     }
 }
+
