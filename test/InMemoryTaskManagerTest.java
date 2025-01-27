@@ -96,14 +96,14 @@ public class InMemoryTaskManagerTest {
         assertEquals(subtask.getStatus(), newSubtask.getStatus(), "Не совпали статусы подзадач.");
     }
 
-
     @Test
     void shouldAddSubtaskInEpicAndChangeEpicsStatus() {
-        Epic epic = createDefaultEpic();
-        Epic newEpic = memoryTaskManager.createEpic(epic);
+        Epic newEpic = createDefaultEpic();
+        newEpic = memoryTaskManager.createEpic(newEpic);
         Subtask subtask = createDefaultSubtask(newEpic.getId());
 
         Subtask newSubtask = memoryTaskManager.createSubtask(subtask);
+        newEpic = memoryTaskManager.getEpic(newEpic.getId());
         ArrayList<Integer> subtasksId = newEpic.getSubtasksIds();
 
         assertTrue(subtasksId.contains(newSubtask.getId()), "Подзадача не добавлена в эпик.");
@@ -112,15 +112,19 @@ public class InMemoryTaskManagerTest {
         subtask.setStatus(TaskStatus.IN_PROGRESS);
         memoryTaskManager.updateSubtask(subtask);
 
+        newEpic = memoryTaskManager.getEpic(newEpic.getId());
+
         assertEquals(TaskStatus.IN_PROGRESS, newEpic.getStatus(), "Статус эпика определен некорректно.");
 
         subtask.setStatus(TaskStatus.DONE);
         memoryTaskManager.updateSubtask(subtask);
+        newEpic = memoryTaskManager.getEpic(newEpic.getId());
 
         assertEquals(TaskStatus.DONE, newEpic.getStatus(), "Статус эпика определен некорректно.");
 
         Subtask subtask2 = createDefaultSubtask(newEpic.getId());
         memoryTaskManager.createSubtask(subtask2);
+        newEpic = memoryTaskManager.getEpic(newEpic.getId());
 
         assertEquals(TaskStatus.IN_PROGRESS, newEpic.getStatus(), "Статус эпика определен некорректно.");
     }
@@ -243,7 +247,62 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    void shouldReturnHistoryOfLastTenTasks() {
+    void shouldNotChangeNameDescriptionStatusOfTaskWithSetters() {
+        String expectedName = "newName";
+        String expectedDescription = "newDescription";
+
+        Task task = createDefaultTask();
+        task = memoryTaskManager.createTask(task);
+
+        task.setName(expectedName);
+        task.setDescription(expectedDescription);
+        task.setStatus(TaskStatus.IN_PROGRESS);
+
+        Task taskInTaskManager = memoryTaskManager.getTask(task.getId());
+
+        assertNotEquals(expectedName, taskInTaskManager.getName(), "Поле имя доступно для изменения.");
+        assertNotEquals(expectedDescription, taskInTaskManager.getDescription(), "Поле описание доступно для изменения.");
+        assertNotEquals(TaskStatus.IN_PROGRESS, taskInTaskManager.getStatus(), "Поле статус доступно для изменения.");
+    }
+
+    @Test
+    void shouldNotChangeNameDescriptionOfEpicWithSetters() {
+        String expectedName = "newName";
+        String expectedDescription = "newDescription";
+
+        Epic epic = createDefaultEpic();
+        epic = memoryTaskManager.createEpic(epic);
+
+        epic.setName(expectedName);
+        epic.setDescription(expectedDescription);
+
+        Epic epicInTaskManager = memoryTaskManager.getEpic(epic.getId());
+
+        assertNotEquals(expectedName, epicInTaskManager.getName(), "Поле имя доступно для изменения.");
+        assertNotEquals(expectedDescription, epicInTaskManager.getDescription(), "Поле описание доступно для изменения.");
+        assertNotEquals(TaskStatus.IN_PROGRESS, epicInTaskManager.getStatus(), "Поле статус доступно для изменения.");
+    }
+
+    @Test
+    void shouldNotChangeNameDescriptionStatusOfSubtaskWithSetters() {
+        String expectedName = "newName";
+        String expectedDescription = "newDescription";
+
+        Subtask subtask = createDefaultSubtaskInEpic();
+
+        subtask.setName(expectedName);
+        subtask.setDescription(expectedDescription);
+        subtask.setStatus(TaskStatus.IN_PROGRESS);
+
+        Subtask subtaskInTaskManager = memoryTaskManager.getSubtask(subtask.getId());
+
+        assertNotEquals(expectedName, subtaskInTaskManager.getName(), "Поле имя доступно для изменения.");
+        assertNotEquals(expectedDescription, subtaskInTaskManager.getDescription(), "Поле описание доступно для изменения.");
+        assertNotEquals(TaskStatus.IN_PROGRESS, subtaskInTaskManager.getStatus(), "Поле статус доступно для изменения.");
+    }
+
+    @Test
+    void shouldReturnHistoryWithoutDuplicates() {
         Task task = createDefaultTask();
         memoryTaskManager.createTask(task);
         Epic epic = createDefaultEpic();
@@ -265,13 +324,159 @@ public class InMemoryTaskManagerTest {
 
         List<Task> history = memoryTaskManager.getHistory();
         assertEquals(task, history.get(0), "Первая задача истории не совпала.");
-        assertEquals(task, history.get(1), "Вторая задача истории не совпала.");
-        assertEquals(epic, history.get(2), "Третья задача истории не совпала.");
-        assertEquals(epic, history.get(3), "Четвертая задача истории не совпала.");
-        assertEquals(epic, history.get(5), "Шестая задача истории не совпала.");
-        assertEquals(subtask, history.get(6), "Седьмая задача истории не совпала.");
-        assertEquals(subtask, history.get(9), "Десятая задача истории не совпала.");
-        assertEquals(10, history.size(), "В истории превышено количество элементов.");
+        assertEquals(epic, history.get(1), "Вторая задача истории не совпала.");
+        assertEquals(subtask, history.get(2), "Третья задача истории не совпала.");
+    }
+
+    @Test
+    void shouldReturnHistoryWithOneTwoThreeTasks() {
+        Task task1 = createDefaultTask();
+        memoryTaskManager.createTask(task1);
+        Task task2 = createDefaultTask();
+        memoryTaskManager.createTask(task2);
+        Task task3 = createDefaultTask();
+        memoryTaskManager.createTask(task3);
+
+        List<Task> historyBefore = memoryTaskManager.getHistory();
+        assertTrue(historyBefore.isEmpty());
+
+        memoryTaskManager.getTask(task1.getId());
+        List<Task> historyAfter1 = memoryTaskManager.getHistory();
+        assertFalse(historyAfter1.isEmpty());
+        assertEquals(task1, historyAfter1.get(0), "Первая задача истории не совпала.");
+
+        memoryTaskManager.getTask(task2.getId());
+        List<Task> historyAfter2 = memoryTaskManager.getHistory();
+        assertFalse(historyAfter2.isEmpty());
+        assertEquals(task1, historyAfter2.get(0), "Первая задача истории не совпала.");
+        assertEquals(task2, historyAfter2.get(1), "Вторая задача истории не совпала.");
+
+        memoryTaskManager.getTask(task3.getId());
+        List<Task> historyAfter3 = memoryTaskManager.getHistory();
+        assertFalse(historyAfter3.isEmpty());
+        assertEquals(task1, historyAfter3.get(0), "Первая задача истории не совпала.");
+        assertEquals(task2, historyAfter3.get(1), "Вторая задача истории не совпала.");
+        assertEquals(task3, historyAfter3.get(2), "Третья задача истории не совпала.");
+    }
+
+    @Test
+    void shouldNotBeInHistoryTaskAfterRemoving() {
+        Task task = createDefaultTask();
+        memoryTaskManager.createTask(task);
+        Epic defaultEpic = createDefaultEpic();
+        Epic epic = memoryTaskManager.createEpic(defaultEpic);
+        Subtask subtask1 = createDefaultSubtask(epic.getId());
+        memoryTaskManager.createSubtask(subtask1);
+        Subtask subtask2 = createDefaultSubtaskInEpic();
+
+        memoryTaskManager.getTask(task.getId());
+        memoryTaskManager.getEpic(epic.getId());
+        memoryTaskManager.getSubtask(subtask1.getId());
+        memoryTaskManager.getSubtask(subtask2.getId());
+
+        List<Task> historyBefore = memoryTaskManager.getHistory();
+        assertEquals(historyBefore.size(), 4, "Размер истории не верный.");
+        assertEquals(task, historyBefore.get(0), "Первая задача истории не совпала.");
+        assertEquals(epic, historyBefore.get(1), "Вторая задача истории не совпала.");
+        assertEquals(subtask1, historyBefore.get(2), "Третья задача истории не совпала.");
+        assertEquals(subtask2, historyBefore.get(3), "Четвёртая задача истории не совпала.");
+
+        memoryTaskManager.deleteTaskPerId(task.getId());
+        List<Task> historyBefore1 = memoryTaskManager.getHistory();
+        assertEquals(historyBefore1.size(), 3, "Размер истории не верный.");
+        assertFalse(historyBefore1.contains(task), "Задача не была удалена из истории.");
+        assertEquals(epic, historyBefore1.get(0), "Первая задача истории не совпала.");
+        assertEquals(subtask1, historyBefore1.get(1), "Вторая задача истории не совпала.");
+        assertEquals(subtask2, historyBefore1.get(2), "Третья задача истории не совпала.");
+
+        memoryTaskManager.deleteEpicPerId(epic.getId());
+        List<Task> historyBefore2 = memoryTaskManager.getHistory();
+        assertEquals(historyBefore2.size(), 1, "Размер истории не верный.");
+        assertFalse(historyBefore2.contains(epic), "Эпик не был удален из истории.");
+        assertFalse(historyBefore2.contains(subtask1), "Подзадача эпика не была удалена из истории.");
+        assertEquals(subtask2, historyBefore2.get(0), "Первая задача истории не совпала.");
+
+
+        memoryTaskManager.deleteSubtaskPerId(subtask2.getId());
+        List<Task> historyBefore3 = memoryTaskManager.getHistory();
+        assertTrue(historyBefore3.isEmpty(), "Подзадача не была удалена из истории.");
+    }
+
+    @Test
+    void shouldNotBeInHistoryTasksAfterRemovingAll() {
+        Task[] tasks = new Task[3];
+        for (int i = 0; i < 3; i++){
+            tasks[i] = createDefaultTask();
+            memoryTaskManager.createTask(tasks[i]);
+            memoryTaskManager.getTask(tasks[i].getId());
+        }
+
+        Epic epic = createDefaultEpic();
+        epic = memoryTaskManager.createEpic(epic);
+        memoryTaskManager.getEpic(epic.getId());
+
+        List<Task> historyBefore = memoryTaskManager.getHistory();
+        assertEquals(historyBefore.size(), 4, "Размер истории не верный.");
+        assertEquals(tasks[0], historyBefore.get(0), "Первая задача истории не совпала.");
+        assertEquals(epic, historyBefore.get(3), "Четвёртая задача истории не совпала.");
+
+        memoryTaskManager.deleteAllTasks();
+        List<Task> historyAfter = memoryTaskManager.getHistory();
+        assertEquals(historyAfter.size(), 1, "Размер истории не верный.");
+        assertEquals(epic, historyAfter.get(0), "Первая задача истории не совпала.");
+    }
+
+    @Test
+    void shouldNotBeInHistoryEpicsAfterRemovingAll() {
+        Epic[] epics = new Epic[3];
+        Subtask[] subtasks = new Subtask[3];
+        for (int i = 0; i < 3; i++){
+            epics[i] = createDefaultEpic();
+            epics[i] = memoryTaskManager.createEpic(epics[i]);
+            subtasks[i] = createDefaultSubtask(epics[i].getId());
+            subtasks[i] = memoryTaskManager.createSubtask(subtasks[i]);
+            memoryTaskManager.getEpic(epics[i].getId());
+            memoryTaskManager.getSubtask(subtasks[i].getId());
+        }
+
+        Task task = createDefaultTask();
+        task = memoryTaskManager.createTask(task);
+        memoryTaskManager.getTask(task.getId());
+
+        List<Task> historyBefore = memoryTaskManager.getHistory();
+        assertEquals(historyBefore.size(), 7, "Размер истории не верный.");
+        assertEquals(epics[0], historyBefore.get(0), "Первая задача истории не совпала.");
+        assertEquals(subtasks[0], historyBefore.get(1), "Вторая задача истории не совпала.");
+        assertEquals(task, historyBefore.get(6), "Последняя задача истории не совпала.");
+
+        memoryTaskManager.deleteAllEpics();
+
+        List<Task> historyAfter = memoryTaskManager.getHistory();
+        assertEquals(historyAfter.size(), 1, "Размер истории не верный.");
+        assertEquals(task, historyAfter.get(0), "Первая задача истории не совпала.");
+    }
+
+    @Test
+    void shouldNotBeInHistorySubtasksAfterRemovingAll() {
+        Subtask[] subtasks = new Subtask[3];
+        for (int i = 0; i < 3; i++){
+            subtasks[i] = createDefaultSubtaskInEpic();
+            memoryTaskManager.getSubtask(subtasks[i].getId());
+        }
+
+        Task task = createDefaultTask();
+        task = memoryTaskManager.createTask(task);
+        memoryTaskManager.getTask(task.getId());
+
+        List<Task> historyBefore = memoryTaskManager.getHistory();
+        assertEquals(historyBefore.size(), 4, "Размер истории не верный.");
+        assertEquals(subtasks[0], historyBefore.get(0), "Первая задача истории не совпала.");
+        assertEquals(task, historyBefore.get(3), "Четвёртая задача истории не совпала.");
+
+        memoryTaskManager.deleteAllSubtasks();
+        List<Task> historyAfter = memoryTaskManager.getHistory();
+        assertEquals(historyAfter.size(), 1, "Размер истории не верный.");
+        assertEquals(task, historyAfter.get(0), "Первая задача истории не совпала.");
     }
 
     @Test

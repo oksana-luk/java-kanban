@@ -31,10 +31,9 @@ public class Main {
         Subtask subtask22 = taskManager.createSubtask(new Subtask("купить шарики", "В красном кресте", TaskStatus.IN_PROGRESS, epic2.getId()));
         Subtask subtask23 = taskManager.createSubtask(new Subtask("купить гирлянды", "В красном кресте", TaskStatus.DONE, epic2.getId()));
 
-
-        Subtask subtask31 = taskManager.createSubtask(new Subtask("Посмотреть лампу в ванную", "На кляйнанцайген", TaskStatus.DONE, epic3.getId()));
-        Subtask subtask32 = taskManager.createSubtask(new Subtask("Стулья на кухню", "Со спинками и не дороже 40 евро за 4 стула", TaskStatus.DONE, epic3.getId()));
-        Subtask subtask33 = taskManager.createSubtask(new Subtask("Вытяжка на кухню", "В красном кресте", TaskStatus.DONE, epic3.getId()));
+//        Subtask subtask31 = taskManager.createSubtask(new Subtask("Посмотреть лампу в ванную", "На кляйнанцайген", TaskStatus.DONE, epic3.getId()));
+//        Subtask subtask32 = taskManager.createSubtask(new Subtask("Стулья на кухню", "Со спинками и не дороже 40 евро за 4 стула", TaskStatus.DONE, epic3.getId()));
+//        Subtask subtask33 = taskManager.createSubtask(new Subtask("Вытяжка на кухню", "В красном кресте", TaskStatus.DONE, epic3.getId()));
 
         System.out.println("_____".repeat(5));
 
@@ -59,10 +58,36 @@ public class Main {
         taskManager.getEpic(6);
         taskManager.getSubtask(9);
         taskManager.getSubtask(10);
+        taskManager.getSubtask(12);
         taskManager.getSubtask(10);
         taskManager.getSubtask(10);
+        taskManager.getTask(1);
+        taskManager.getTask(1);
+        taskManager.getSubtask(7);
+        taskManager.getSubtask(7);
 
         System.out.println(taskManager.getHistory());
+
+        System.out.println("_____".repeat(5) + "delete task id 2");
+
+        taskManager.deleteTaskPerId(2);
+
+        System.out.println(taskManager.getHistory());
+
+        System.out.println("_____".repeat(5) + "delete epic id 4");
+
+        taskManager.deleteEpicPerId(4);
+
+        System.out.println(taskManager.getHistory());
+
+        System.out.println("_____".repeat(5) + "delete leer epic id 6 and subtask id 12");
+
+        taskManager.deleteEpicPerId(6);
+        taskManager.deleteSubtaskPerId(12);
+
+        System.out.println(taskManager.getHistory());
+
+
 
 
     }
