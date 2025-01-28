@@ -10,12 +10,9 @@ class TasksLinkedList<T> {
 
     public Node<T> linkLast(T data) {
         Node<T> currentNode = new Node<>(data);
-        if (head == null) {
+        if (head == null && tail == null) {
             head = currentNode;
-        } else if (tail == null) {
             tail = currentNode;
-            currentNode.prev = head;
-            head.next = currentNode;
         } else {
             Node<T> lastNode = tail;
             tail = currentNode;
@@ -46,15 +43,6 @@ class TasksLinkedList<T> {
         if (size == 1) {
             head = null;
             tail = null;
-        } else if (size == 2) {
-            if (node == head) {
-                head = nextNode;
-                tail = null;
-                nextNode.prev = null;
-            } else { //node == tail
-                tail = null;
-                previousNode.next = null;
-            }
         } else {
             if (node == head) {
                 head = nextNode;
