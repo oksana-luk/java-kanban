@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Map;
 
 public class InMemoryTaskManager implements TaskManager {
-    private Map<Integer, Task> tasks;
-    private Map<Integer, Epic> epics;
-    private Map<Integer, Subtask> subtasks;
+    protected Map<Integer, Task> tasks;
+    protected Map<Integer, Epic> epics;
+    protected Map<Integer, Subtask> subtasks;
     private HistoryManager historyManager;
-    private int counter;
+    protected int counter;
 
 
     public InMemoryTaskManager() {
@@ -136,7 +136,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     //сценарии для более простой демонстрации возможностей программы
-    private static void printAllTasks(TaskManager manager) {
+    public static void printAllTasks(TaskManager manager) {
         System.out.println("Задачи:");
         for (Task task : manager.getAllTasks()) {
             System.out.println(task);
