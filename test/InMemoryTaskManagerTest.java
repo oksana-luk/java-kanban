@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import service.InMemoryTaskManager;
 import service.Managers;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +44,8 @@ public class InMemoryTaskManagerTest {
         assertEquals(task.getName(), newTask.getName(), "Не совпали имена задач.");
         assertEquals(task.getDescription(), newTask.getDescription(), "Не совпали описания задач.");
         assertEquals(task.getStatus(), newTask.getStatus(), "Не совпали статусы задач.");
+        assertEquals(task.getStartTime(), newTask.getStartTime(), "Не совпала дата начала задачи.");
+        assertEquals(task.getDuration(), newTask.getDuration(), "Не совпада длительность задачи");
      }
 
     @Test
@@ -67,6 +71,8 @@ public class InMemoryTaskManagerTest {
         assertEquals(epic.getName(), newEpic.getName(), "Не совпали имена эпиков.");
         assertEquals(epic.getDescription(), newEpic.getDescription(), "Не совпали описания эпиков.");
         assertEquals(epic.getStatus(), newEpic.getStatus(), "Не совпали статусы эпиков.");
+        assertNull(epic.getStartTime(), "Не совпала дата начала.");
+        assertEquals(epic.getDuration(), Duration.ZERO, "Не совпада длительность.");
     }
 
         @Test
@@ -94,6 +100,8 @@ public class InMemoryTaskManagerTest {
         assertEquals(subtask.getName(), newSubtask.getName(), "Не совпали имена подзадач.");
         assertEquals(subtask.getDescription(), newSubtask.getDescription(), "Не совпали описания подзадач.");
         assertEquals(subtask.getStatus(), newSubtask.getStatus(), "Не совпали статусы подзадач.");
+        assertEquals(subtask.getStartTime(), newSubtask.getStartTime(), "Не совпала дата начала задачи.");
+        assertEquals(subtask.getDuration(), newSubtask.getDuration(), "Не совпада длительность задачи");
     }
 
     @Test
@@ -163,8 +171,6 @@ public class InMemoryTaskManagerTest {
 
         assertEquals(newSubtask, currentSubtask, "Подзадачи не совпали.");
     }
-
-
 
     @Test
     void shouldReturnEpicsSubtasks() {
@@ -509,7 +515,8 @@ public class InMemoryTaskManagerTest {
         Subtask subtask = createDefaultSubtask(epic.getId());
         memoryTaskManager.createSubtask(subtask);
 
-        Subtask otherSubtask = new Subtask("otherSubtask", "description", TaskStatus.NEW, epic.getId());
+        Subtask otherSubtask = new Subtask("otherSubtask", "description", TaskStatus.NEW, epic.getId(),
+                                LocalDateTime.now(), Duration.ofMinutes(48));
         otherSubtask.setId(subtask.getId());
 
         assertEquals(subtask, otherSubtask, "Подзадачи не равны.");
@@ -531,7 +538,8 @@ public class InMemoryTaskManagerTest {
         Task task = createDefaultTask();
         memoryTaskManager.createTask(task);
 
-        Task otherTask = new Task("otherTask", "description", TaskStatus.NEW);
+        Task otherTask = new Task("otherTask", "description", TaskStatus.NEW, LocalDateTime.now(),
+                            Duration.ofMinutes(130));
         otherTask.setId(task.getId());
 
         assertEquals(task, otherTask, "Задачи не равны.");
@@ -630,8 +638,39 @@ public class InMemoryTaskManagerTest {
         assertFalse(epicSubtasks.contains(subtask), "Подзадача в эпике не удалилась.");
     }
 
+    @Test
+    void shouldCalculateEpicsDurationOnBasisOfSubtasksDuration() {
+        Epic epic = createDefaultEpic();
+        memoryTaskManager.createEpic(epic);
+
+        assertNull(epic.getStartTime());
+        assertEquals(epic.getDuration(), Duration.ZERO);
+
+        Subtask subtask =  new Subtask("name", "description", TaskStatus.NEW, epic.getId(),
+                LocalDateTime.of(2025, 01, 1, 13, 30), Duration.ofMinutes(30));
+        memoryTaskManager.createSubtask(subtask);
+        epic = memoryTaskManager.getEpic(epic.getId());
+
+        assertEquals(epic.getStartTime(), subtask.getStartTime());
+        assertEquals(epic.getDuration(), subtask.getDuration());
+        assertEquals(epic.getEndTime(), subtask.getStartTime().plus(subtask.getDuration()));
+
+        Subtask secondSubtask = new Subtask("name2", "description2", TaskStatus.NEW, epic.getId(),
+                LocalDateTime.of(2025, 01, 2, 13, 30), Duration.ofMinutes(20));
+        memoryTaskManager.createSubtask(secondSubtask);
+        Subtask thirdSubtask = new Subtask("name3", "description3", TaskStatus.NEW, epic.getId(),
+                LocalDateTime.of(2025, 01, 2, 13, 30), Duration.ofMinutes(1));
+        memoryTaskManager.createSubtask(thirdSubtask);
+        epic = memoryTaskManager.getEpic(epic.getId());
+
+        assertEquals(epic.getStartTime(), subtask.getStartTime());
+        assertEquals(epic.getDuration(), Duration.ofMinutes(51));
+        assertEquals(epic.getEndTime(), secondSubtask.getStartTime().plus(secondSubtask.getDuration()));
+    }
+
     Task createDefaultTask() {
-        return new Task("task", "description", TaskStatus.NEW);
+        return new Task("task", "description", TaskStatus.NEW, LocalDateTime.now(),
+                Duration.ofMinutes(55));
     }
 
     Epic createDefaultEpic() {
@@ -639,7 +678,8 @@ public class InMemoryTaskManagerTest {
     }
 
     Subtask createDefaultSubtask(int epicId) {
-        return new Subtask("subtask", "description", TaskStatus.NEW, epicId);
+        return new Subtask("subtask", "description", TaskStatus.NEW, epicId, LocalDateTime.now(),
+                Duration.ofMinutes(120));
     }
 
     Subtask createDefaultSubtaskInEpic() {

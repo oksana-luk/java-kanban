@@ -3,13 +3,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import model.Epic;
 import model.Subtask;
 import model.Task;
+import model.TaskStatus;
 import org.junit.jupiter.api.Test;
 
 import service.FileBackedTaskManager;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 class FileBackedTaskManagerTest extends InMemoryTaskManagerTest {
@@ -54,19 +56,55 @@ class FileBackedTaskManagerTest extends InMemoryTaskManagerTest {
     }
 
     @Test
-    void shouldLoadFromNotEmptyFile() {
-        File file = new File("data_test_shouldLoadFromNotEmptyFile.csv");
-        FileBackedTaskManager fileBackedTaskManager = FileBackedTaskManager.loadFromFile(file);
+    void shouldLoadFromNotEmptyFile() throws IOException {
+        //File file = new File("data_test_shouldLoadFromNotEmptyFile.csv");
+        File file = File.createTempFile("tskmn", ".csv");
 
-        assertEquals(fileBackedTaskManager.getAllTasks().size(), 3, "Не восстановлены задачи.");
-        assertEquals(fileBackedTaskManager.getAllEpics().size(), 3, "Не востановлены эпики.");
-        assertEquals(fileBackedTaskManager.getAllSubtasks().size(), 7, "Не восстановлены подзадачи.");
-        assertEquals(fileBackedTaskManager.getEpic(4).getSubtasksIds().size(), 4, "В эпике не восстановлены подзадачи.");
+
+        BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+        bw.write("id,type,name,status,startTime,description,startTime,duration,epic\n" +
+                "1,TASK,Запись к врачу,NEW,Записаться к другому терапевту,15.02.2025 12:00:00,20,\n" +
+                "3,TASK,Водафон,DONE,Просмотреть новые тарифы,17.02.2025 12:15:00,25,\n" +
+                "5,EPIC,Украсить дом к НГ,IN_PROGRESS,,22.02.2025 18:00:00,2765,\n" +
+                "11,SUBTASK,Купить елку,NEW,,22.02.2025 18:00:00,120,5\n" +
+                "13,SUBTASK,купить гирлянды,DONE,Заказать на вайлдберриз,24.02.2025 15:15:00,25,5\n");
+        bw.close();
+
+        FileBackedTaskManager fileBackedTaskManager = FileBackedTaskManager.loadFromFile(file);
+        assertEquals(fileBackedTaskManager.getAllTasks().size(), 2, "Не восстановлены задачи.");
+        assertEquals(fileBackedTaskManager.getAllEpics().size(), 1, "Не востановлены эпики.");
+        assertEquals(fileBackedTaskManager.getAllSubtasks().size(), 2, "Не восстановлены подзадачи.");
+
+        Task task = fileBackedTaskManager.getTask(1);
+        assertTrue(task instanceof Task);
+        assertEquals(task.getName(), "Запись к врачу");
+        assertEquals(task.getStatus(), TaskStatus.NEW);
+        assertEquals(task.getDescription(), "Записаться к другому терапевту");
+        assertEquals(task.getStartTime(), LocalDateTime.of(2025, 02, 15, 12, 0));
+        assertEquals(task.getDuration(), Duration.ofMinutes(20));
+
+        Epic epic = fileBackedTaskManager.getEpic(5);
+        assertEquals(epic.getSubtasksIds().size(), 2, "В эпике не восстановлены подзадачи.");
+
+        Subtask subtask = fileBackedTaskManager.getSubtask(11);
+        assertEquals(subtask.getEpicId(), 5);
     }
 
     @Test
-    void shouldInitializeCounterOfIds() {
-        File file = new File("data_shouldInitializeCounterOfIds.csv");
+    void shouldInitializeCounterOfIds() throws IOException {
+        //File file = new File("data_test_shouldLoadFromNotEmptyFile.csv");
+        File file = File.createTempFile("tskmn", ".csv");
+
+
+        BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+        bw.write("id,type,name,status,startTime,description,startTime,duration,epic\n" +
+                "1,TASK,Запись к врачу,NEW,Записаться к другому терапевту,15.02.2025 12:00:00,20,\n" +
+                "3,TASK,Водафон,DONE,Просмотреть новые тарифы,17.02.2025 12:15:00,25,\n" +
+                "5,EPIC,Украсить дом к НГ,IN_PROGRESS,,22.02.2025 18:00:00,2765,\n" +
+                "11,SUBTASK,Купить елку,NEW,,22.02.2025 18:00:00,120,5\n" +
+                "13,SUBTASK,купить гирлянды,DONE,Заказать на вайлдберриз,24.02.2025 15:15:00,25,5\n");
+        bw.close();
+
         FileBackedTaskManager fileBackedTaskManager = FileBackedTaskManager.loadFromFile(file);
 
         Task task = createDefaultTask();
