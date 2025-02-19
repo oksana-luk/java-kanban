@@ -91,8 +91,13 @@ public class Task {
             result = result + ", description=null";
         }
         result = result + ", id=" + id +
-                ", status=" + status +
-                '}';
+                ", status=" + status;
+        if (startTime != null) {
+            result = result + ", startTime=" + startTime.toString();
+        } else {
+            result = result + ", startTime=null";
+        }
+        result = result + ", duration=" + duration.toString() + '}';
         return result;
     }
 

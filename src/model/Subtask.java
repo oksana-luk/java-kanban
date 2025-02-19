@@ -31,8 +31,13 @@ public class Subtask extends Task {
         }
         result = result + ", id=" + id +
                 ", epicId=" + epicId  +
-                ", status=" + status +
-                '}';
+                ", status=" + status;
+        if (startTime != null) {
+            result = result + ", startTime=" + startTime.toString();
+        } else {
+            result = result + ", startTime=null";
+        }
+        result = result + ", duration=" + duration.toString() + '}';
         return result;
     }
 }

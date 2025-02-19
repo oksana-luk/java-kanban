@@ -13,9 +13,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class InMemoryTaskManagerTest {
     private InMemoryTaskManager memoryTaskManager;
+    //protected static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     @BeforeEach
     void beforeEach() {
@@ -166,7 +168,7 @@ public class InMemoryTaskManagerTest {
         assertNull(memoryTaskManager.getSubtask(1));
 
         Subtask newSubtask = createDefaultSubtaskInEpic();
-
+        newSubtask = memoryTaskManager.createSubtask(newSubtask);
         Subtask currentSubtask = memoryTaskManager.getSubtask(newSubtask.getId());
 
         assertEquals(newSubtask, currentSubtask, "Подзадачи не совпали.");
@@ -295,6 +297,7 @@ public class InMemoryTaskManagerTest {
         String expectedDescription = "newDescription";
 
         Subtask subtask = createDefaultSubtaskInEpic();
+        subtask = memoryTaskManager.createSubtask(subtask);
 
         subtask.setName(expectedName);
         subtask.setDescription(expectedDescription);
@@ -349,7 +352,8 @@ public class InMemoryTaskManagerTest {
         memoryTaskManager.getTask(task1.getId());
         List<Task> historyAfter1 = memoryTaskManager.getHistory();
         assertFalse(historyAfter1.isEmpty());
-        assertEquals(task1, historyAfter1.get(0), "Первая задача истории не совпала.");
+        //assertEquals(task1, historyAfter1.get(0), "Первая задача истории не совпала.");
+        assertEquals(task1, historyAfter1.getFirst(), "Первая задача истории не совпала.");
 
         memoryTaskManager.getTask(task2.getId());
         List<Task> historyAfter2 = memoryTaskManager.getHistory();
@@ -374,6 +378,7 @@ public class InMemoryTaskManagerTest {
         Subtask subtask1 = createDefaultSubtask(epic.getId());
         memoryTaskManager.createSubtask(subtask1);
         Subtask subtask2 = createDefaultSubtaskInEpic();
+        subtask2 = memoryTaskManager.createSubtask(subtask2);
 
         memoryTaskManager.getTask(task.getId());
         memoryTaskManager.getEpic(epic.getId());
@@ -400,7 +405,8 @@ public class InMemoryTaskManagerTest {
         assertEquals(historyBefore2.size(), 1, "Размер истории не верный.");
         assertFalse(historyBefore2.contains(epic), "Эпик не был удален из истории.");
         assertFalse(historyBefore2.contains(subtask1), "Подзадача эпика не была удалена из истории.");
-        assertEquals(subtask2, historyBefore2.get(0), "Первая задача истории не совпала.");
+        //assertEquals(subtask2, historyBefore2.get(0), "Первая задача истории не совпала.");
+        assertEquals(subtask2, historyBefore2.getFirst(), "Первая задача истории не совпала.");
 
 
         memoryTaskManager.deleteSubtaskPerId(subtask2.getId());
@@ -429,7 +435,8 @@ public class InMemoryTaskManagerTest {
         memoryTaskManager.deleteAllTasks();
         List<Task> historyAfter = memoryTaskManager.getHistory();
         assertEquals(historyAfter.size(), 1, "Размер истории не верный.");
-        assertEquals(epic, historyAfter.get(0), "Первая задача истории не совпала.");
+        //assertEquals(epic, historyAfter.get(0), "Первая задача истории не совпала.");
+        assertEquals(epic, historyAfter.getFirst(), "Первая задача истории не совпала.");
     }
 
     @Test
@@ -459,14 +466,19 @@ public class InMemoryTaskManagerTest {
 
         List<Task> historyAfter = memoryTaskManager.getHistory();
         assertEquals(historyAfter.size(), 1, "Размер истории не верный.");
-        assertEquals(task, historyAfter.get(0), "Первая задача истории не совпала.");
+        //assertEquals(task, historyAfter.get(0), "Первая задача истории не совпала.");
+        assertEquals(task, historyAfter.getFirst(), "Первая задача истории не совпала.");
     }
 
     @Test
     void shouldNotBeInHistorySubtasksAfterRemovingAll() {
         Subtask[] subtasks = new Subtask[3];
+        Epic epic = createDefaultEpic();
+        epic = memoryTaskManager.createEpic(epic);
+
         for (int i = 0; i < 3; i++){
-            subtasks[i] = createDefaultSubtaskInEpic();
+            subtasks[i] = createDefaultSubtask(epic.getId());
+            subtasks[i] =  memoryTaskManager.createSubtask(subtasks[i]);
             memoryTaskManager.getSubtask(subtasks[i].getId());
         }
 
@@ -482,7 +494,8 @@ public class InMemoryTaskManagerTest {
         memoryTaskManager.deleteAllSubtasks();
         List<Task> historyAfter = memoryTaskManager.getHistory();
         assertEquals(historyAfter.size(), 1, "Размер истории не верный.");
-        assertEquals(task, historyAfter.get(0), "Первая задача истории не совпала.");
+        //assertEquals(task, historyAfter.get(0), "Первая задача истории не совпала.");
+        assertEquals(task, historyAfter.getFirst(), "Первая задача истории не совпала.");
     }
 
     @Test
@@ -559,7 +572,7 @@ public class InMemoryTaskManagerTest {
         taskAfter.setStatus(TaskStatus.IN_PROGRESS);
 
         assertTrue(memoryTaskManager.updateTask(taskAfter), "Задача не обновлена.");
-        assertEquals(taskBefore.getId(), taskBefore.getId(), "Идентификаторы не совпали.");
+        assertEquals(taskBefore.getId(), taskAfter.getId(), "Идентификаторы не совпали.");
         assertNotEquals(taskBefore.getName(), taskAfter.getName(), "Имя задач совпало.");
         assertNotEquals(taskBefore.getDescription(), taskAfter.getDescription(), "Описание задач совпало.");
         assertNotEquals(taskBefore.getStatus(), taskAfter.getStatus(), "Статус задач совпал.");
@@ -569,16 +582,17 @@ public class InMemoryTaskManagerTest {
     void shouldReplaceGivenIdOnGenerated() {
         Task task = createDefaultTask();
         Epic epic = createDefaultEpic();
-        Subtask subtask = createDefaultSubtaskInEpic();
 
         int id = 500;
 
         task.setId(id);
         epic.setId(id + 1);
-        subtask.setId(id + 2);
 
         Task newTask = memoryTaskManager.createTask(task);
         Epic newEpic = memoryTaskManager.createEpic(epic);
+
+        Subtask subtask = createDefaultSubtask(epic.getId());
+        subtask.setId(id + 2);
         Subtask newSubtask = memoryTaskManager.createSubtask(subtask);
 
         assertNotEquals(id, newTask.getId(), "Идентификатор задачи не изменился.");
@@ -647,7 +661,7 @@ public class InMemoryTaskManagerTest {
         assertEquals(epic.getDuration(), Duration.ZERO);
 
         Subtask subtask =  new Subtask("name", "description", TaskStatus.NEW, epic.getId(),
-                LocalDateTime.of(2025, 01, 1, 13, 30), Duration.ofMinutes(30));
+                LocalDateTime.of(2025, 1, 1, 13, 30), Duration.ofMinutes(30));
         memoryTaskManager.createSubtask(subtask);
         epic = memoryTaskManager.getEpic(epic.getId());
 
@@ -656,21 +670,21 @@ public class InMemoryTaskManagerTest {
         assertEquals(epic.getEndTime(), subtask.getStartTime().plus(subtask.getDuration()));
 
         Subtask secondSubtask = new Subtask("name2", "description2", TaskStatus.NEW, epic.getId(),
-                LocalDateTime.of(2025, 01, 2, 13, 30), Duration.ofMinutes(20));
+                LocalDateTime.of(2025, 1, 2, 13, 0), Duration.ofMinutes(20));
         memoryTaskManager.createSubtask(secondSubtask);
         Subtask thirdSubtask = new Subtask("name3", "description3", TaskStatus.NEW, epic.getId(),
-                LocalDateTime.of(2025, 01, 2, 13, 30), Duration.ofMinutes(1));
+                LocalDateTime.of(2025, 1, 2, 13, 30), Duration.ofMinutes(1));
         memoryTaskManager.createSubtask(thirdSubtask);
         epic = memoryTaskManager.getEpic(epic.getId());
 
         assertEquals(epic.getStartTime(), subtask.getStartTime());
         assertEquals(epic.getDuration(), Duration.ofMinutes(51));
-        assertEquals(epic.getEndTime(), secondSubtask.getStartTime().plus(secondSubtask.getDuration()));
+        assertEquals(epic.getEndTime(), thirdSubtask.getStartTime().plus(thirdSubtask.getDuration()));
     }
 
     Task createDefaultTask() {
-        return new Task("task", "description", TaskStatus.NEW, LocalDateTime.now(),
-                Duration.ofMinutes(55));
+        int minutes = new Random().nextInt(1000);
+        return new Task("task", "description", TaskStatus.NEW, LocalDateTime.now().minusMinutes(minutes), Duration.ofNanos(1));
     }
 
     Epic createDefaultEpic() {
@@ -678,17 +692,15 @@ public class InMemoryTaskManagerTest {
     }
 
     Subtask createDefaultSubtask(int epicId) {
-        return new Subtask("subtask", "description", TaskStatus.NEW, epicId, LocalDateTime.now(),
-                Duration.ofMinutes(120));
+        int minutes = new Random().nextInt(1000);
+        return new Subtask("subtask", "description", TaskStatus.NEW, epicId, LocalDateTime.now().minusMinutes(minutes), Duration.ofNanos(1));
     }
 
     Subtask createDefaultSubtaskInEpic() {
         Epic epic = createDefaultEpic();
         Epic newEpic = memoryTaskManager.createEpic(epic);
 
-        Subtask subtask = createDefaultSubtask(newEpic.getId());
-
-        return memoryTaskManager.createSubtask(subtask);
+        return createDefaultSubtask(newEpic.getId());
     }
 
 }

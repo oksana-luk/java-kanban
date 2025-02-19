@@ -17,9 +17,9 @@ public class Main {
         FileBackedTaskManager taskManager = FileBackedTaskManager.loadFromFile(new File("data.csv"));
 
         Task task1 = taskManager.createTask(new Task("Запись к врачу", "Записаться к другому терапевту",
-                TaskStatus.NEW, LocalDateTime.of(2025, 02, 15, 12, 0), Duration.ofMinutes(20)));
+                TaskStatus.NEW, LocalDateTime.of(2025, 02, 15, 12, 0), Duration.ofMinutes(40)));
         Task task2 = taskManager.createTask(new Task("Купить хлебницу", "", TaskStatus.IN_PROGRESS,
-                LocalDateTime.of(2025, 02, 16, 16, 0), Duration.ofMinutes(55)));
+                LocalDateTime.of(2025, 02, 15, 12, 30), Duration.ofMinutes(55)));
         Task task3 = taskManager.createTask(new Task("Водафон", "Просмотреть новые тарифы", TaskStatus.DONE,
                 LocalDateTime.of(2025, 02, 17, 12, 15), Duration.ofMinutes(25)));
 
@@ -35,10 +35,10 @@ public class Main {
                 epic1.getId(), LocalDateTime.of(2025, 02, 19, 18, 15), Duration.ofMinutes(80)));
         Subtask subtask13 = taskManager.createSubtask(new Subtask("Подарки в родителям",
                 "Зказать на озон подарки родственникам с доставкой по почтеб м б на вайлдберриз", TaskStatus.NEW,
-                epic1.getId(), LocalDateTime.of(2025, 02, 20, 10, 0), Duration.ofMinutes(40)));
+                epic1.getId(), LocalDateTime.of(2025, 02, 20, 23, 0), Duration.ofMinutes(70)));
         Subtask subtask14 = taskManager.createSubtask(new Subtask("Сладкие подарки детям",
                 "Заказать на амазон подарки детям сладкие на 2 человек", TaskStatus.NEW, epic1.getId(),
-                LocalDateTime.of(2025, 02, 21, 10, 30), Duration.ofMinutes(30)));
+                LocalDateTime.of(2025, 02, 21, 0, 0), Duration.ofMinutes(30)));
 
         Subtask subtask21 = taskManager.createSubtask(new Subtask("Купить елку", "", TaskStatus.NEW,
                 epic2.getId(), LocalDateTime.of(2025, 02, 22, 18, 0), Duration.ofMinutes(120)));
@@ -48,17 +48,24 @@ public class Main {
                 epic2.getId(), LocalDateTime.of(2025, 02, 24, 15, 15), Duration.ofMinutes(25)));
 
         InMemoryTaskManager.printAllTasks(taskManager);
+//        for (Task task : taskManager.getPrioritizedTasks()) {
+//            System.out.println(task);
+//        }
 
-        System.out.println("_____".repeat(5) + "delete task id 2");
-        System.out.println("_____".repeat(5) + "delete epic id 4");
-        System.out.println("_____".repeat(5) + "delete leer epic id 6 and subtask id 12");
+//        System.out.println("_____".repeat(5) + "delete task id 2");
+//        System.out.println("_____".repeat(5) + "delete epic id 4");
+//        System.out.println("_____".repeat(5) + "delete leer epic id 6 and subtask id 12");
 
-        taskManager.deleteTaskPerId(2);
-        taskManager.deleteEpicPerId(4);
-        taskManager.deleteEpicPerId(6);
-        taskManager.deleteSubtaskPerId(12);
+//        taskManager.deleteTaskPerId(2);
+//        taskManager.deleteEpicPerId(4);
+//        taskManager.deleteEpicPerId(6);
+//        taskManager.deleteSubtaskPerId(12);
 
-        InMemoryTaskManager.printAllTasks(taskManager);
+//        for (Task task : taskManager.getPrioritizedTasks()) {
+//            System.out.println(task);
+//        }
+
+        //InMemoryTaskManager.printAllTasks(taskManager);
     }
 }
 
