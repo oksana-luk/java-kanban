@@ -15,7 +15,7 @@ import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File data;
-    private final static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+    private final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     public FileBackedTaskManager(File data) {
         this.data = data;
@@ -44,7 +44,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return result.toString();
     }
 
-    private void writeCollection(Writer writer, Collection<? extends Task> tasks) throws ManagerSaveException{
+    private void writeCollection(Writer writer, Collection<? extends Task> tasks) throws ManagerSaveException {
         tasks.forEach(task -> {
             try {
                 writer.write(toString(task));
