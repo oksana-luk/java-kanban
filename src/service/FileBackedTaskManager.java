@@ -15,7 +15,6 @@ import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File data;
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     public FileBackedTaskManager(File data) {
         this.data = data;
@@ -65,7 +64,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .map(Task::getId)
                     .max(Integer::compareTo);
 
-            taskManager.counter = (idOptional.isPresent()) ? idOptional.get() : 0;
+            taskManager.counter = idOptional.orElse(0);
             taskManager.getAllEpics().forEach(taskManager::updateEpicDuration);
         } catch (IOException e) {
             throw new ManagerBackupException("Program experienced an error trying to initialize from a file.");
@@ -84,7 +83,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String name = data[2];
         TaskStatus status = TaskStatus.valueOf(data[3]);
         String description = data[4];
-        LocalDateTime startTime = (data[5].isEmpty()) ? null : LocalDateTime.parse(data[5], dateTimeFormatter);
+        LocalDateTime startTime = (data[5].isEmpty()) ? null : LocalDateTime.parse(data[5], DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
         Duration duration = Duration.ofMinutes(Long.parseLong(data[6]));
 
         if (type == TaskType.TASK) {
@@ -202,7 +201,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         if (dateTime == null) {
             return "";
         }
-        return dateTime.format(dateTimeFormatter);
+        return dateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
     }
 }
 
