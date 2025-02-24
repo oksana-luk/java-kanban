@@ -11,14 +11,11 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
-    private File data;
-    private static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+    private final File data;
+    private final static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     public FileBackedTaskManager(File data) {
         this.data = data;
@@ -47,30 +44,29 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return result.toString();
     }
 
-    private void writeCollection(Writer writer, Collection<? extends Task> tasks) throws IOException {
-        for (Task task : tasks) {
-            writer.write(toString(task));
-        }
+    private void writeCollection(Writer writer, Collection<? extends Task> tasks) throws ManagerSaveException{
+        tasks.forEach(task -> {
+            try {
+                writer.write(toString(task));
+            } catch (IOException e) {
+                throw new ManagerSaveException("Program experienced an error trying to save in a file.");
+            }
+        });
     }
 
     public static FileBackedTaskManager loadFromFile(File file) throws ManagerBackupException {
         FileBackedTaskManager taskManager = new FileBackedTaskManager(file);
-
         try {
             List<String> allLines = Files.readAllLines(file.toPath());
-            List<Integer> ids = new ArrayList<>();
-            for (int i = 1; i < allLines.size(); i++) {
-                Task task = fromString(taskManager, allLines.get(i));
-                if (task != null) {
-                    ids.add(task.getId());
-                }
-            }
-            Collections.sort(ids);
-            taskManager.counter = (!ids.isEmpty()) ? Collections.max(ids) : 0;
+            Optional<Integer> idOptional = allLines
+                    .stream()
+                    .map(line -> fromString(taskManager, line))
+                    .filter(Objects::nonNull)
+                    .map(Task::getId)
+                    .max(Integer::compareTo);
 
-            for (Epic epic : taskManager.getAllEpics()) {
-                taskManager.updateEpicDuration(epic);
-            }
+            taskManager.counter = (idOptional.isPresent()) ? idOptional.get() : 0;
+            taskManager.getAllEpics().forEach(taskManager::updateEpicDuration);
         } catch (IOException e) {
             throw new ManagerBackupException("Program experienced an error trying to initialize from a file.");
         }

@@ -1,3 +1,5 @@
+import exception.ManagerAddTaskException;
+import exception.ManagerSaveException;
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -18,8 +20,12 @@ public class Main {
 
         Task task1 = taskManager.createTask(new Task("Запись к врачу", "Записаться к другому терапевту",
                 TaskStatus.NEW, LocalDateTime.of(2025, 02, 15, 12, 0), Duration.ofMinutes(40)));
-        Task task2 = taskManager.createTask(new Task("Купить хлебницу", "", TaskStatus.IN_PROGRESS,
-                LocalDateTime.of(2025, 02, 15, 12, 30), Duration.ofMinutes(55)));
+        try {
+            Task task2 = taskManager.createTask(new Task("Купить хлебницу", "", TaskStatus.IN_PROGRESS,
+                    LocalDateTime.of(2025, 02, 15, 12, 30), Duration.ofMinutes(55)));
+        } catch (ManagerAddTaskException e) {
+            System.out.println(e.getMessage());
+        }
         Task task3 = taskManager.createTask(new Task("Водафон", "Просмотреть новые тарифы", TaskStatus.DONE,
                 LocalDateTime.of(2025, 02, 17, 12, 15), Duration.ofMinutes(25)));
 
@@ -36,10 +42,13 @@ public class Main {
         Subtask subtask13 = taskManager.createSubtask(new Subtask("Подарки в родителям",
                 "Зказать на озон подарки родственникам с доставкой по почтеб м б на вайлдберриз", TaskStatus.NEW,
                 epic1.getId(), LocalDateTime.of(2025, 02, 20, 23, 0), Duration.ofMinutes(70)));
-        Subtask subtask14 = taskManager.createSubtask(new Subtask("Сладкие подарки детям",
-                "Заказать на амазон подарки детям сладкие на 2 человек", TaskStatus.NEW, epic1.getId(),
-                LocalDateTime.of(2025, 02, 21, 0, 0), Duration.ofMinutes(30)));
-
+        try {
+            Subtask subtask14 = taskManager.createSubtask(new Subtask("Сладкие подарки детям",
+                    "Заказать на амазон подарки детям сладкие на 2 человек", TaskStatus.NEW, epic1.getId(),
+                    LocalDateTime.of(2025, 02, 21, 0, 0), Duration.ofMinutes(30)));
+        } catch (ManagerAddTaskException e) {
+            System.out.println(e.getMessage());;
+        }
         Subtask subtask21 = taskManager.createSubtask(new Subtask("Купить елку", "", TaskStatus.NEW,
                 epic2.getId(), LocalDateTime.of(2025, 02, 22, 18, 0), Duration.ofMinutes(120)));
         Subtask subtask22 = taskManager.createSubtask(new Subtask("купить шарики", "Заказать на озон", TaskStatus.IN_PROGRESS,
@@ -61,9 +70,9 @@ public class Main {
 //        taskManager.deleteEpicPerId(6);
 //        taskManager.deleteSubtaskPerId(12);
 
-//        for (Task task : taskManager.getPrioritizedTasks()) {
-//            System.out.println(task);
-//        }
+        for (Task task : taskManager.getPrioritizedTasks()) {
+            System.out.println(task);
+        }
 
         //InMemoryTaskManager.printAllTasks(taskManager);
     }

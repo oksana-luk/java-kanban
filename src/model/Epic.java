@@ -36,7 +36,7 @@ public class Epic extends Task {
                 ", subtasksIds=" + subtasksIds.toString() +
                  ", status=" + status;
         if (startTime != null) {
-            result = result + ", startTime=" + startTime.toString();
+            result = result + ", startTime=" + startTime;
         } else {
             result = result + ", startTime=null";
         }
@@ -54,10 +54,6 @@ public class Epic extends Task {
 
     public void deleteAllSubtaskId() {
         subtasksIds.clear();
-    }
-
-    public void setSubtasksIds(ArrayList<Integer> subtasksIds) {
-        this.subtasksIds = subtasksIds;
     }
 
     public void setStartTime(LocalDateTime startTime) {

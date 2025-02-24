@@ -45,9 +45,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void removeTasks(List<? extends Task> tasks) {
-        for (Task task : tasks) {
-            remove(task.getId());
-        }
+        tasks.stream().mapToInt(Task::getId).forEach(this::remove);
     }
 }
 

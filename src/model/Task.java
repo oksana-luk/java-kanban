@@ -93,12 +93,11 @@ public class Task {
         result = result + ", id=" + id +
                 ", status=" + status;
         if (startTime != null) {
-            result = result + ", startTime=" + startTime.toString();
+            result = result + ", startTime=" + startTime;
         } else {
             result = result + ", startTime=null";
         }
         result = result + ", duration=" + duration.toString() + '}';
         return result;
     }
-
 }

@@ -33,7 +33,7 @@ public class Subtask extends Task {
                 ", epicId=" + epicId  +
                 ", status=" + status;
         if (startTime != null) {
-            result = result + ", startTime=" + startTime.toString();
+            result = result + ", startTime=" + startTime;
         } else {
             result = result + ", startTime=null";
         }
