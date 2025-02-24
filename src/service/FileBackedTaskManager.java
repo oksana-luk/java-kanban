@@ -15,7 +15,7 @@ import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File data;
-    private final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     public FileBackedTaskManager(File data) {
         this.data = data;
@@ -84,7 +84,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String name = data[2];
         TaskStatus status = TaskStatus.valueOf(data[3]);
         String description = data[4];
-        LocalDateTime startTime = (data[5].isEmpty()) ? null : LocalDateTime.parse(data[5], DATE_TIME_FORMATTER);
+        LocalDateTime startTime = (data[5].isEmpty()) ? null : LocalDateTime.parse(data[5], dateTimeFormatter);
         Duration duration = Duration.ofMinutes(Long.parseLong(data[6]));
 
         if (type == TaskType.TASK) {
@@ -202,7 +202,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         if (dateTime == null) {
             return "";
         }
-        return dateTime.format(DATE_TIME_FORMATTER);
+        return dateTime.format(dateTimeFormatter);
     }
 }
 
