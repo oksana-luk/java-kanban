@@ -35,7 +35,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         StringBuilder result = new StringBuilder();
         TaskType taskType = TaskType.valueOf(task.getClass().getSimpleName().toUpperCase());
         result.append(String.format("%d,%s,%s,%s,%s,%s,%d,", task.getId(), taskType, task.getName(), task.getStatus(),
-                        task.getDescription(), formatDateTime(task.getStartTime()), task.getDuration().toMinutes()));
+                        task.getDescription(), formatDateTime(task.getStartTime()), (task.getDuration() == null) ? 0 : task.getDuration().toMinutes()));
         if (task instanceof Subtask) {
             result.append(((Subtask) task).getEpicId());
         }

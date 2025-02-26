@@ -64,8 +64,20 @@ public class Task {
         return startTime;
     }
 
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
     public Duration getDuration() {
         return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getEndTime() {
+        return (startTime == null || duration == null) ? null : startTime.plus(duration);
     }
 
     @Override
@@ -97,7 +109,7 @@ public class Task {
         } else {
             result = result + ", startTime=null";
         }
-        result = result + ", duration=" + duration.toString() + '}';
+        result = result + ", duration=" + Objects.toString(duration, "null") + '}';
         return result;
     }
 }

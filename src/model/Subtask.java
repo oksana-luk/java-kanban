@@ -2,6 +2,7 @@ package model;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class Subtask extends Task {
     private int epicId;
@@ -37,7 +38,7 @@ public class Subtask extends Task {
         } else {
             result = result + ", startTime=null";
         }
-        result = result + ", duration=" + duration.toString() + '}';
+        result = result + ", duration=" + Objects.toString(duration.toString(), "null") + '}';
         return result;
     }
 }

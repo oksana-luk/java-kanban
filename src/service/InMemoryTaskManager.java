@@ -18,9 +18,9 @@ public class InMemoryTaskManager implements TaskManager {
     protected int counter;
     protected Set<Task> prioritizedTasks = new TreeSet<>((o1, o2) -> {
         int result = -1;
-        if (o1.getStartTime().isAfter(o2.getStartTime()))
+        if (!isTaskPeriodFilled(o1) || !isTaskPeriodFilled(o2) || o1.getStartTime().isAfter(o2.getStartTime()))
             result = 1;
-        else if (o1.getStartTime().equals(o2.getStartTime()) && o1.equals(o2))
+        else if (o1.getStartTime().equals(o2.getStartTime()))
             result = 0;
         return result;
     });
@@ -35,15 +35,17 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task createTask(Task task) throws ManagerAddTaskException {
-        if (isTaskPeriodNotCorrect(task)) {
-            throw new ManagerAddTaskException("Задача не создана, потому что ее время выполнения пересекается с другой задачей.");
+        if (isTaskPeriodFilled(task) && !isTaskPeriodCorrect(task)) {
+            throw new ManagerAddTaskException("Задача не создана, пересекается по периоду с другой задачей.");
         }
         Task newTask = new Task(task.getName(), task.getDescription(), task.getStatus(), task.getStartTime(),
-                        task.getDuration());
+                task.getDuration());
         newTask.setId(++counter);
         tasks.put(newTask.getId(), newTask);
         task.setId(newTask.getId());
-        prioritizedTasks.add(task);
+        if (isTaskPeriodFilled(task)) {
+            prioritizedTasks.add(newTask);
+        }
         return task;
     }
 
@@ -62,11 +64,11 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic == null) {
             throw new ManagerAddTaskException("Подзадача не создана, потому что не найдена ее родительская задача.");
         }
-        if (isTaskPeriodNotCorrect(subtask)) {
-            throw new ManagerAddTaskException("Подзадача не создана, потому что ее время выполнения пересекается с другой задачей.");
+        if (isTaskPeriodFilled(subtask) && !isTaskPeriodCorrect(subtask)) {
+            throw new ManagerAddTaskException("Подзадача не создана, пересекается по периоду с другой задачей.");
         }
         Subtask newSubtask = new Subtask(subtask.getName(), subtask.getDescription(), subtask.getStatus(),
-                                subtask.getEpicId(), subtask.getStartTime(), subtask.getDuration());
+                subtask.getEpicId(), subtask.getStartTime(), subtask.getDuration());
         newSubtask.setId(++counter);
         subtasks.put(newSubtask.getId(), newSubtask);
 
@@ -74,7 +76,9 @@ public class InMemoryTaskManager implements TaskManager {
         updateEpicStatus(epic);
         updateEpicDuration(epic);
         subtask.setId(newSubtask.getId());
-        prioritizedTasks.add(subtask);
+        if (isTaskPeriodFilled(subtask)) {
+            prioritizedTasks.add(newSubtask);
+        }
         return subtask;
     }
 
@@ -126,7 +130,7 @@ public class InMemoryTaskManager implements TaskManager {
             return new ArrayList<>();
         }
         return new ArrayList<>(tasks.values());
-     }
+    }
 
     @Override
     public ArrayList<Epic> getAllEpics() {
@@ -167,7 +171,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic == null) {
             return subtaskByEpic;
         }
-       ArrayList<Integer> subtasksIds = epic.getSubtasksIds();
+        ArrayList<Integer> subtasksIds = epic.getSubtasksIds();
         if (subtasksIds.isEmpty()) {
             return subtaskByEpic;
         }
@@ -214,7 +218,9 @@ public class InMemoryTaskManager implements TaskManager {
         if (task.getStartTime() != oldTask.getStartTime() || task.getDuration() != oldTask.getDuration()
                 && prioritizedTasks.contains(task)) {
             prioritizedTasks.remove(task);
-            prioritizedTasks.add(task);
+            if (isTaskPeriodCorrect(task)) {
+                prioritizedTasks.add(task);
+            }
         }
         tasks.put(task.getId(), task);
         return true;
@@ -245,7 +251,9 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtask.getStartTime() != oldSubtask.getStartTime() || subtask.getDuration() != oldSubtask.getDuration()
                 && prioritizedTasks.contains(subtask)) {
             prioritizedTasks.remove(subtask);
-            prioritizedTasks.add(subtask);
+            if (isTaskPeriodCorrect(subtask)) {
+                prioritizedTasks.add(subtask);
+            }
         }
 
         subtasks.put(subtask.getId(), subtask);
@@ -333,26 +341,30 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic.getSubtasksIds().isEmpty()) {
             epic.setStartTime(null);
             epic.setEndTime(null);
-            epic.setDuration(Duration.ZERO);
+            epic.setDuration(null);
         }
         List<Subtask> epicSubtasks = epic.getSubtasksIds()
                 .stream()
                 .map(id -> subtasks.get(id))
                 .toList();
-        Optional<LocalDateTime> startTime = epicSubtasks.stream()
+        LocalDateTime startTime = epicSubtasks.stream()
                 .map(Task::getStartTime)
-                .min(LocalDateTime::compareTo);
-        Optional<LocalDateTime> endTime = epicSubtasks.stream()
-                .map(subtask -> subtask.getStartTime().plus(subtask.getDuration()))
-                .max(LocalDateTime::compareTo);
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo)
+                .orElse(null);
+        LocalDateTime endTime = epicSubtasks.stream()
+                .map(Task::getEndTime)
+                .filter(Objects::nonNull)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
         Duration duration = epicSubtasks.stream()
                 .map(Task::getDuration)
+                .filter(Objects::nonNull)
                 .reduce(Duration.ZERO, Duration::plus);
 
-        epic.setStartTime(startTime.orElse(null));
-        epic.setEndTime(endTime.orElse(null));
-        epic.setDuration(duration);
-
+        epic.setStartTime(startTime);
+        epic.setEndTime(endTime);
+        epic.setDuration((duration == Duration.ZERO) ? null : duration);
     }
 
     public List<Task> getPrioritizedTasks() {
@@ -362,15 +374,21 @@ public class InMemoryTaskManager implements TaskManager {
     protected static boolean isIntervalsOverlap(Task task1, Task task2) {
         LocalDateTime start1 = task1.getStartTime();
         LocalDateTime start2 = task2.getStartTime();
-        LocalDateTime end1 = start1.plus(task1.getDuration());
-        LocalDateTime end2 = start2.plus(task2.getDuration());
+        LocalDateTime end1 = task1.getEndTime();
+        LocalDateTime end2 = task2.getEndTime();
         LocalDateTime start = (start1.isAfter(start2)) ? start1 : start2;
         LocalDateTime end = (end1.isBefore(end2)) ? end1 : end2;
         return end.isAfter(start);
     }
 
-    protected boolean isTaskPeriodNotCorrect(Task incomingTask) {
-        return incomingTask.getStartTime() == null || incomingTask.getDuration() == null
-                    || prioritizedTasks.stream().anyMatch(task -> isIntervalsOverlap(incomingTask, task));
+    protected boolean isTaskPeriodCorrect(Task incomingTask) {
+        return !getPrioritizedTasks()
+                .stream()
+                .filter(task -> isTaskPeriodFilled(task))
+                .anyMatch(task -> isIntervalsOverlap(incomingTask, task));
+    }
+
+    protected boolean isTaskPeriodFilled(Task incomimgTask) {
+        return incomimgTask.getStartTime() != null && incomimgTask.getDuration() != null;
     }
 }

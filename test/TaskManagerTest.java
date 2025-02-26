@@ -441,7 +441,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
         epic = taskManager.createEpic(createDefaultEpic());
 
         assertNull(epic.getStartTime());
-        assertEquals(epic.getDuration(), Duration.ZERO);
+        assertNull(epic.getDuration());
 
         Subtask subtask =  new Subtask("name", "description", TaskStatus.NEW, epic.getId(),
                 LocalDateTime.of(2025, 1, 1, 13, 30), Duration.ofMinutes(30));
@@ -479,17 +479,11 @@ abstract class TaskManagerTest<T extends TaskManager> {
         epic = createDefaultEpic();
         epic = taskManager.createEpic(epic);
 
-        task = new Task("task", "description", TaskStatus.NEW, null, Duration.ofMinutes(1));
-        subtask = new Subtask("task", "description", TaskStatus.NEW, epic.getId(), null, Duration.ofMinutes(1));
+        task = new Task("task", "description", TaskStatus.NEW, null, null);
+        subtask = new Subtask("task", "description", TaskStatus.NEW, epic.getId(), null, null);
 
-        assertThrows(ManagerAddTaskException.class, () -> taskManager.createTask(task), "Создана задача с пустой датой начала.");
-        assertThrows(ManagerAddTaskException.class, () -> taskManager.createSubtask(subtask), "Создана задача с пустой датой начала.");
-
-        task = new Subtask("task", "description", TaskStatus.NEW, epic.getId(), LocalDateTime.now(), null);
-        subtask = new Subtask("task", "description", TaskStatus.NEW, epic.getId(), LocalDateTime.now(), null);
-
-        assertThrows(ManagerAddTaskException.class, () -> taskManager.createSubtask(subtask), "Создана содача без длительности.");
-        assertThrows(ManagerAddTaskException.class, () -> taskManager.createTask(task), "Создана содача без длительности.");
+        assertNotNull(taskManager.createTask(task), "Не создана задача с пустой датой начала и без длительности.");
+        assertNotNull(taskManager.createSubtask(subtask), "Не создана подзадача с пустой датой начала и без длительности.");
 
         Task task1 = new Task("task", "description", TaskStatus.NEW,
                 LocalDateTime.of(2025, 1, 1, 18, 20), Duration.ofMinutes(50));
