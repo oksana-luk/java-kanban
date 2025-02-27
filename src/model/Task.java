@@ -1,5 +1,7 @@
 package model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -7,11 +9,23 @@ public class Task {
     protected String description;
     protected int id;
     protected TaskStatus status;
+    protected Duration duration;
+    protected LocalDateTime startTime;
 
-    public Task(String name, String description, TaskStatus status) {
+    public Task(String name, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
         this.name = name;
         this.description = description;
         this.status = status;
+        this.startTime = startTime;
+        this.duration = duration;
+    }
+
+    public Task(Task task) {
+        this.name = task.name;
+        this.description = task.description;
+        this.status = task.status;
+        this.startTime = task.startTime;
+        this.duration = task.duration;
     }
 
     public int getId() {
@@ -46,6 +60,26 @@ public class Task {
         this.status = status;
     }
 
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getEndTime() {
+        return (startTime == null || duration == null) ? null : startTime.plus(duration);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -69,8 +103,13 @@ public class Task {
             result = result + ", description=null";
         }
         result = result + ", id=" + id +
-                ", status=" + status +
-                '}';
+                ", status=" + status;
+        if (startTime != null) {
+            result = result + ", startTime=" + startTime;
+        } else {
+            result = result + ", startTime=null";
+        }
+        result = result + ", duration=" + Objects.toString(duration, "null") + '}';
         return result;
     }
 }

@@ -20,12 +20,13 @@ public class InMemoryHistoryManager implements HistoryManager {
     public void addTask(Task task) {
         Task taskCopy;
         if (task instanceof Subtask) {
-            taskCopy = new Subtask(task.getName(), task.getDescription(), task.getStatus(), ((Subtask) task).getEpicId());
+            taskCopy = new Subtask(task.getName(), task.getDescription(), task.getStatus(), ((Subtask) task).getEpicId(),
+                        task.getStartTime(), task.getDuration());
         } else if (task instanceof Epic) {
             taskCopy = new Epic(task.getName(), task.getDescription());
             taskCopy.setStatus(task.getStatus());
         } else {
-            taskCopy = new Task(task.getName(), task.getDescription(), task.getStatus());
+            taskCopy = new Task(task.getName(), task.getDescription(), task.getStatus(), task.getStartTime(), task.getDuration());
         }
         taskCopy.setId(task.getId());
         remove(task.getId());
@@ -44,9 +45,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void removeTasks(List<? extends Task> tasks) {
-        for (Task task : tasks) {
-            remove(task.getId());
-        }
+        tasks.stream().mapToInt(Task::getId).forEach(this::remove);
     }
 }
 
