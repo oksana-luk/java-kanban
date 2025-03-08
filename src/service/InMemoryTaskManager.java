@@ -213,7 +213,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task updateTask(Task task) throws TaskNotFoundException {
         if (!tasks.containsKey(task.getId())) {
-            throw new TaskNotFoundException(String.format("Не найдена задача с id %s." ,task.getId()));
+            throw new TaskNotFoundException(String.format("Не найдена задача с id %s.", task.getId()));
         }
         Task oldTask = tasks.get(task.getId());
         if (task.getStartTime() != oldTask.getStartTime() || task.getDuration() != oldTask.getDuration()
