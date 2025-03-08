@@ -72,7 +72,7 @@ public class EpicsHandler extends BaseHttpHandler {
             && pathParts[3].equals("subtasks")) {
             return Endpoint.GET_EPIC_SUBTASKS;
         }
-        if (method.equals("POST") && pathParts.length == 2 && pathParts[1].equals("epics")){
+        if (method.equals("POST") && pathParts.length == 2 && pathParts[1].equals("epics")) {
             return Endpoint.POST_EPIC;
         }
         if (method.equals("DELETE") && pathParts.length == 3 && pathParts[1].equals("epics")) {
@@ -82,7 +82,7 @@ public class EpicsHandler extends BaseHttpHandler {
     }
 
     private void handleGetEpics(HttpExchange exchange) throws IOException {
-        List<Epic> epicsList= taskManager.getAllEpics();
+        List<Epic> epicsList = taskManager.getAllEpics();
 
         String jsonString = gson.toJson(epicsList);
         sendText(exchange, jsonString, 200);

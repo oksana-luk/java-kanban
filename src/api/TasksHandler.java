@@ -65,7 +65,7 @@ public class TasksHandler extends BaseHttpHandler {
         if (method.equals("GET") && pathParts.length == 3 && pathParts[1].equals("tasks")) {
             return Endpoint.GET_TASK;
         }
-        if (method.equals("POST") && pathParts.length == 2 && pathParts[1].equals("tasks")){
+        if (method.equals("POST") && pathParts.length == 2 && pathParts[1].equals("tasks")) {
             return Endpoint.POST_TASK;
         }
         if (method.equals("DELETE") && pathParts.length == 3 && pathParts[1].equals("tasks")) {
@@ -75,7 +75,7 @@ public class TasksHandler extends BaseHttpHandler {
     }
 
     private void handleGetTasks(HttpExchange exchange) throws IOException {
-        List<Task> taskList= taskManager.getAllTasks();
+        List<Task> taskList = taskManager.getAllTasks();
 
         String jsonString = gson.toJson(taskList);
         sendText(exchange, jsonString, 200);
