@@ -65,7 +65,7 @@ public class SubtasksHandler extends BaseHttpHandler {
         if (method.equals("GET") && pathParts.length == 3 && pathParts[1].equals("subtasks")) {
             return Endpoint.GET_SUBTASK;
         }
-        if (method.equals("POST") && pathParts.length == 2 && pathParts[1].equals("subtasks")){
+        if (method.equals("POST") && pathParts.length == 2 && pathParts[1].equals("subtasks")) {
             return Endpoint.POST_SUBTASK;
         }
         if (method.equals("DELETE") && pathParts.length == 3 && pathParts[1].equals("subtasks")) {
@@ -75,7 +75,7 @@ public class SubtasksHandler extends BaseHttpHandler {
     }
 
     private void handleGetSubtasks(HttpExchange exchange) throws IOException {
-        List<Subtask> allSubtasks= taskManager.getAllSubtasks();
+        List<Subtask> allSubtasks = taskManager.getAllSubtasks();
 
         String jsonString = gson.toJson(allSubtasks);
         sendText(exchange, jsonString, 200);
