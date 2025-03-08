@@ -111,7 +111,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public Task createTask(Task task)  {
+    public Task createTask(Task task) throws ManagerAddTaskException {
         Task creadtedTask =  super.createTask(task);
         save();
         return creadtedTask;
@@ -150,30 +150,24 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public boolean updateTask(Task task) {
-        boolean successfully = super.updateTask(task);
-        if (successfully) {
-            save();
-        }
-        return successfully;
+    public Task updateTask(Task task) throws TaskNotFoundException {
+        super.updateTask(task);
+        save();
+        return task;
     }
 
     @Override
-    public boolean updateEpic(Epic epic) {
-        boolean successfully = super.updateEpic(epic);
-        if (successfully) {
-            save();
-        }
-        return successfully;
+    public Epic updateEpic(Epic epic) {
+        super.updateEpic(epic);
+        save();
+        return epic;
     }
 
     @Override
-    public boolean updateSubtask(Subtask subtask) {
-        boolean successfully = super.updateSubtask(subtask);
-        if (successfully) {
-            save();
-        }
-        return successfully;
+    public Subtask updateSubtask(Subtask subtask) {
+        super.updateSubtask(subtask);
+        save();
+        return subtask;
     }
 
     @Override

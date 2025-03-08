@@ -24,6 +24,5 @@ class ManagersTest {
 
         assertNotNull(history, "В менеджере задач не инициализирован объект истории.");
         assertNotNull(history.getHistory(), "В менеджере задач не инициализирован контейнер для хранения задач.");
-     }
-
+    }
 }

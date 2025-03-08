@@ -169,14 +169,13 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         List<String> allLinesBefore = Files.readAllLines(data.toPath());
 
         assertEquals(allLinesBefore.size(), 6, "Не все задачи попали в файл.");
-        assertTrue(allLinesBefore.get(2).equals("3,TASK,Водафон,DONE,Просмотреть новые тарифы,17.02.2025 12:15:00,25,"));
+        assertEquals(allLinesBefore.get(2), "3,TASK,Водафон,DONE,Просмотреть новые тарифы,17.02.2025 12:15:00,25,");
 
         task = taskManager.deleteTaskPerId(3);
 
         List<String> allLinesAfter = Files.readAllLines(data.toPath());
 
         assertEquals(allLinesAfter.size(), 5, "Не все задачи попали в файл.");
-        assertFalse(allLinesAfter.get(2).equals("3,TASK,Водафон,DONE,Просмотреть новые тарифы,17.02.2025 12:15:00,25,"));
+        assertNotEquals(allLinesAfter.get(2), "3,TASK,Водафон,DONE,Просмотреть новые тарифы,17.02.2025 12:15:00,25,");
     }
-
 }

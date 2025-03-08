@@ -1,6 +1,7 @@
 package service;
 
 import exception.ManagerAddTaskException;
+import exception.TaskNotFoundException;
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -169,7 +170,7 @@ public class InMemoryTaskManager implements TaskManager {
         ArrayList<Subtask> subtaskByEpic = new ArrayList<>();
         Epic epic = epics.get(epicId);
         if (epic == null) {
-            return subtaskByEpic;
+            throw new TaskNotFoundException(String.format("Не найден эпик с id %s.", epicId));
         }
         ArrayList<Integer> subtasksIds = epic.getSubtasksIds();
         if (subtasksIds.isEmpty()) {
@@ -210,9 +211,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public boolean updateTask(Task task) {
+    public Task updateTask(Task task) throws TaskNotFoundException {
         if (!tasks.containsKey(task.getId())) {
-            return false;
+            throw new TaskNotFoundException(String.format("Не найдена задача с id %s.", task.getId()));
         }
         Task oldTask = tasks.get(task.getId());
         if (task.getStartTime() != oldTask.getStartTime() || task.getDuration() != oldTask.getDuration()
@@ -223,29 +224,29 @@ public class InMemoryTaskManager implements TaskManager {
             }
         }
         tasks.put(task.getId(), task);
-        return true;
+        return task;
     }
 
     @Override
-    public boolean updateEpic(Epic epic) {
+    public Epic updateEpic(Epic epic) {
         if (!epics.containsKey(epic.getId())) {
-            return false;
+            throw new TaskNotFoundException(String.format("Не найдена задача с id %s.", epic.getId()));
         }
         Epic currentEpic = epics.get(epic.getId());
         currentEpic.setName(epic.getName());
         currentEpic.setDescription(epic.getDescription());
 
-        return true;
+        return epic;
     }
 
     @Override
-    public boolean updateSubtask(Subtask subtask) {
+    public Subtask updateSubtask(Subtask subtask) {
         if (!subtasks.containsKey(subtask.getId())) {
-            return false;
+            throw new TaskNotFoundException(String.format("Не найдена задача с id %s.", subtask.getId()));
         }
         Subtask currentSubtask = subtasks.get(subtask.getId());
         if (currentSubtask.getEpicId() != subtask.getEpicId()) {
-            return false;
+            throw new TaskNotFoundException("Перенос в другой эпик не доступен.");
         }
         Subtask oldSubtask = subtasks.get(subtask.getId());
         if (subtask.getStartTime() != oldSubtask.getStartTime() || subtask.getDuration() != oldSubtask.getDuration()
@@ -261,22 +262,32 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epics.get(currentSubtask.getEpicId());
         updateEpicStatus(epic);
         updateEpicDuration(epic);
-        return true;
+        return subtask;
     }
 
     @Override
     public Task deleteTaskPerId(int id) {
+        if (!tasks.containsKey(id)) {
+            throw new TaskNotFoundException(String.format("Не найдена задача с id %s.", id));
+        }
         historyManager.remove(id);
-        prioritizedTasks.remove(tasks.get(id));
+        if (prioritizedTasks.contains(tasks.get(id))) {
+            prioritizedTasks.remove(tasks.get(id));
+        }
         return tasks.remove(id);
     }
 
     @Override
     public Epic deleteEpicPerId(int id) {
+        if (!epics.containsKey(id)) {
+            throw new TaskNotFoundException(String.format("Не найдена задача с id %s.", id));
+        }
         Epic epic = epics.get(id);
         if (epic != null) {
             epic.getSubtasksIds().forEach(subtaskId -> {
-                prioritizedTasks.remove(subtasks.get(subtaskId));
+                if (prioritizedTasks.contains(subtasks.get(subtaskId))) {
+                    prioritizedTasks.remove(subtasks.get(subtaskId));
+                }
                 subtasks.remove(subtaskId);
                 historyManager.remove(subtaskId);
             });
@@ -288,6 +299,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Subtask deleteSubtaskPerId(int id) {
+        if (!subtasks.containsKey(id)) {
+            throw new TaskNotFoundException(String.format("Не найдена задача с id %s.", id));
+        }
         Subtask subtask = subtasks.get(id);
         if (subtask == null) {
             return null;
@@ -382,10 +396,10 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     protected boolean isTaskPeriodCorrect(Task incomingTask) {
-        return !getPrioritizedTasks()
+        return getPrioritizedTasks()
                 .stream()
-                .filter(task -> isTaskPeriodFilled(task))
-                .anyMatch(task -> isIntervalsOverlap(incomingTask, task));
+                .filter(this::isTaskPeriodFilled)
+                .noneMatch(task -> isIntervalsOverlap(incomingTask, task));
     }
 
     protected boolean isTaskPeriodFilled(Task incomimgTask) {

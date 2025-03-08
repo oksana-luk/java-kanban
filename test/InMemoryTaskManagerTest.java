@@ -207,7 +207,7 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager
         taskAfter.setName("newName");
         taskAfter.setStatus(TaskStatus.IN_PROGRESS);
 
-        assertTrue(taskManager.updateTask(taskAfter), "Задача не обновлена.");
+        assertDoesNotThrow(() -> taskManager.updateTask(taskAfter), "Задача не обновлена.");
         assertEquals(taskBefore.getId(), taskAfter.getId(), "Идентификаторы не совпали.");
         assertNotEquals(taskBefore.getName(), taskAfter.getName(), "Имя задач совпало.");
         assertNotEquals(taskBefore.getDescription(), taskAfter.getDescription(), "Описание задач совпало.");
