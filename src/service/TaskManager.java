@@ -34,11 +34,11 @@ public interface TaskManager {
 
     void deleteAllSubtasks();
 
-    boolean updateTask(Task task);
+    Task updateTask(Task task);
 
-    boolean updateEpic(Epic epic);
+    Epic updateEpic(Epic epic);
 
-    boolean updateSubtask(Subtask subtask);
+    Subtask updateSubtask(Subtask subtask);
 
     Task deleteTaskPerId(int id);
 
