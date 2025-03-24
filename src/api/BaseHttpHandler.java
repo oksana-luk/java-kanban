@@ -26,6 +26,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
         exchange.sendResponseHeaders(code, resp.length);
         exchange.getResponseBody().write(resp);
+        exchange.getResponseBody().flush();
         exchange.close();
     }
 
@@ -36,6 +37,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
         exchange.getResponseHeaders().add("Content-Type", "text/plain;charset=utf-8");
         exchange.sendResponseHeaders(404, resp.length);
         exchange.getResponseBody().write(resp);
+        exchange.getResponseBody().flush();
         exchange.close();
     }
 
@@ -46,6 +48,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
         exchange.sendResponseHeaders(code, resp.length);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
         exchange.getResponseBody().write(resp);
+        exchange.getResponseBody().flush();
         exchange.close();
     }
 
