@@ -1,4 +1,5 @@
 import exception.ManagerAddTaskException;
+import exception.TaskNotFoundException;
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -233,7 +234,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
         task.setDescription(expectedDescription);
         task.setStatus(TaskStatus.IN_PROGRESS);
 
-        assertTrue(taskManager.updateTask(task), "Задачи не обновлена.");
+        assertDoesNotThrow(() -> taskManager.updateTask(task), "Задачи не обновлена.");
 
         Optional<Task> updatedTaskOptional = taskManager.getTask(task.getId());
         assertTrue(updatedTaskOptional.isPresent(), "Не найдена задача по Id.");
@@ -252,7 +253,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
         epic.setName(expectedName);
         epic.setDescription(expectedDescription);
 
-        assertTrue(taskManager.updateEpic(epic), "Эпик не обновлен.");
+        assertDoesNotThrow(() -> taskManager.updateEpic(epic), "Эпик не обновлен.");
 
         Optional<Epic> optUpdatedEpic = taskManager.getEpic(epic.getId());
         assertTrue(optUpdatedEpic.isPresent(), "Эпик не найден по Id.");
@@ -272,7 +273,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
         subtask.setDescription(expectedDescription);
         subtask.setStatus(TaskStatus.IN_PROGRESS);
 
-        assertTrue(taskManager.updateSubtask(subtask), "Подзадача не обновлена.");
+        assertDoesNotThrow(() -> taskManager.updateSubtask(subtask), "Подзадача не обновлена.");
 
         Optional<Subtask> optUpdatedSubtask = taskManager.getSubtask(subtask.getId());
         assertTrue(optUpdatedSubtask.isPresent(), "Не найдена подзадача по Id.");
@@ -361,10 +362,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
         taskManager.deleteEpicPerId(epic.getId());
         epics = taskManager.getAllEpics();
-        epicSubtasks = taskManager.getEpicSubtasks(epic.getId());
-
+        assertThrows(TaskNotFoundException.class, () -> taskManager.getEpicSubtasks(epic.getId()), "Эпик не удалился.");
         assertFalse(epics.contains(epic), "Эпик не удалился.");
-        assertFalse(epicSubtasks.contains(subtask), "Подзадача в эпике не удалилась.");
     }
 
     @Test
